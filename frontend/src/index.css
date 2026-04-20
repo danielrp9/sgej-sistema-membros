@@ -1,0 +1,33 @@
+/* src/index.css */
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* Cores Institucionais NextStep */
+  --primary: #1e3a8a;
+  --primary-hover: #1e40af;
+  --bg-gray: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-gray);
+  color: var(--text-main);
+}
+
+#root {
+  width: 100%;
+}
