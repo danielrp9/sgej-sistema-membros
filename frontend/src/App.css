@@ -1,9 +1,0 @@
-// src/App.tsx
-import { AppRoutes } from "./routes";
-import "./index.css"; // Certifique-se de que este é o CSS que limpamos
-
-function App() {
-  return <AppRoutes />;
-}
-
-export default App; 

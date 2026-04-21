@@ -1,33 +1,28 @@
-/* src/index.css */
-:root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  /* Cores Institucionais NextStep */
-  --primary: #1e3a8a;
-  --primary-hover: #1e40af;
-  --bg-gray: #f8fafc;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
+/* Importando uma versão similar à da NASA via CDN para facilitar */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+
+@theme {
+  --color-brand-green: #00875A;
+  --color-brand-dark: #1A1D1F;
+  --color-brand-bg: #F0F2F5;
+  --bg-sidebar-gradient: linear-gradient(180deg, #1A1D1F 0%, #111315 100%);
+  
+  /* Definindo a fonte Orbitron/Nasa como a família 'brand' */
+  --font-nasa: "Orbitron", sans-serif;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  body {
+    @apply bg-brand-bg text-brand-dark antialiased;
+    font-family: 'Inter', sans-serif;
+  }
 }
 
-body {
-  margin: 0;
-  display: flex;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: var(--bg-gray);
-  color: var(--text-main);
-}
-
-#root {
-  width: 100%;
+/* Classe utilitária para aplicar o estilo NASA */
+.font-nasa {
+  font-family: var(--font-nasa);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
