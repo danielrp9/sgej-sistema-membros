@@ -15,7 +15,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# Definição dos Apps
+# ── Aplicações ────────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -23,12 +23,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     # Bibliotecas de Terceiros
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',  # ✅ adicionado: invalida refresh tokens após rotação
     'corsheaders',
     'drf_spectacular',
-    
+
     # Apps do Sistema (Desacoplados em /apps)
     'accounts',
     'members',
@@ -67,7 +69,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Banco de dados SQLite para desenvolvimento acadêmico
+# ── Banco de dados ────────────────────────────────────────────────────────────
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -75,31 +77,41 @@ DATABASES = {
     }
 }
 
-# Configuração de Autenticação e Permissões (DRF)
+# ── Model de usuário customizado ──────────────────────────────────────────────
+# ✅ adicionado: aponta para o AbstractUser com login via e-mail
+AUTH_USER_MODEL = 'accounts.User'
+
+# ── Django REST Framework ─────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JSONWebTokenAuthentication',
+        # ✅ corrigido: classe correta do SimpleJWT (a original estava errada)
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-# Configuração do JWT
+# ── SimpleJWT ─────────────────────────────────────────────────────────────────
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),   # ✅ ajustado de 1 dia para 8h (mais seguro)
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,                  # ✅ adicionado: gera novo refresh a cada uso
+    'BLACKLIST_AFTER_ROTATION': True,               # ✅ adicionado: invalida o refresh anterior
+    'UPDATE_LAST_LOGIN': True,                      # ✅ adicionado: atualiza last_login no banco
     'AUTH_HEADER_TYPES': ('Bearer',),
+    # ✅ adicionado: usa o serializer customizado que injeta role no payload
+    'TOKEN_OBTAIN_SERIALIZER': 'accounts.serializers.CustomTokenObtainPairSerializer',
 }
 
-# Configuração de CORS (Libera o React)
+# ── CORS ──────────────────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
-# Internacionalização
+# ── Internacionalização ───────────────────────────────────────────────────────
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
