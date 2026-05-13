@@ -5,13 +5,12 @@ from rest_framework.views import APIView
 from accounts.permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOrViewer
 from .models import Member
 from .serializers import MemberSerializer, MemberListSerializer
+from core.mixins import AuditLogMixin
 
 
-class MemberListCreateView(generics.ListCreateAPIView):
-    """
-    GET  → Lista membros com filtros (ADMIN e VIEWER).
-    POST → Cria membro (apenas ADMIN).
-    """
+class MemberListCreateView(AuditLogMixin, generics.ListCreateAPIView):
+
+    audit_model_name = "Member"
     queryset = Member.objects.all()
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "email", "registration"]
@@ -47,12 +46,9 @@ class MemberListCreateView(generics.ListCreateAPIView):
         return queryset
 
 
-class MemberDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET    → Detalha membro (ADMIN e VIEWER).
-    PATCH  → Atualiza parcialmente (apenas ADMIN).
-    DELETE → Remove membro (apenas ADMIN).
-    """
+class MemberDetailView(AuditLogMixin, generics.RetrieveUpdateDestroyAPIView):
+
+    audit_model_name = "Member"
     queryset = Member.objects.all()
     serializer_class = MemberSerializer
     permission_classes = [IsAdminOrReadOnly]

@@ -3,10 +3,7 @@ from pathlib import Path
 import sys
 from datetime import timedelta
 
-# Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Adiciona a pasta 'apps' ao sys.path para que o Django encontre os módulos internos
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 SECRET_KEY = 'django-insecure-chave-temporaria-para-desenvolvimento'
@@ -24,22 +21,23 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Bibliotecas de Terceiros
+    # Terceiros
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',  # ✅ adicionado: invalida refresh tokens após rotação
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_spectacular',
 
-    # Apps do Sistema (Desacoplados em /apps)
+    # Apps do sistema
     'accounts',
     'members',
     'history',
     'certificates',
+    'core',  # ✅ necessário para o AuditLog
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Deve vir antes do CommonMiddleware
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,31 +75,30 @@ DATABASES = {
     }
 }
 
-# ── Model de usuário customizado ──────────────────────────────────────────────
-# ✅ adicionado: aponta para o AbstractUser com login via e-mail
+# ── Usuário customizado ───────────────────────────────────────────────────────
 AUTH_USER_MODEL = 'accounts.User'
 
-# ── Django REST Framework ─────────────────────────────────────────────────────
+# ── DRF ──────────────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # ✅ corrigido: classe correta do SimpleJWT (a original estava errada)
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # ✅ handler customizado que padroniza todos os erros
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }
 
 # ── SimpleJWT ─────────────────────────────────────────────────────────────────
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),   # ✅ ajustado de 1 dia para 8h (mais seguro)
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,                  # ✅ adicionado: gera novo refresh a cada uso
-    'BLACKLIST_AFTER_ROTATION': True,               # ✅ adicionado: invalida o refresh anterior
-    'UPDATE_LAST_LOGIN': True,                      # ✅ adicionado: atualiza last_login no banco
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
-    # ✅ adicionado: usa o serializer customizado que injeta role no payload
     'TOKEN_OBTAIN_SERIALIZER': 'accounts.serializers.CustomTokenObtainPairSerializer',
 }
 
@@ -110,6 +107,67 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+# ── Handlers globais de erro (ativos apenas com DEBUG=False) ──────────────────
+handler404 = 'core.exceptions.handler_404'
+handler500 = 'core.exceptions.handler_500'
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {module} → {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '[{levelname}] {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        # Exibe no terminal
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        # Salva em arquivo (erros graves)
+        'file_errors': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'errors.log',
+            'level': 'ERROR',
+            'formatter': 'verbose',
+        },
+        # Salva todas as requisições
+        'file_general': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'general.log',
+            'level': 'INFO',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        # Logger padrão do Django
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        # Logger do projeto (use: logging.getLogger('sgej'))
+        'sgej': {
+            'handlers': ['console', 'file_general'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        # Logger de erros
+        'django.request': {
+            'handlers': ['console', 'file_errors'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
 
 # ── Internacionalização ───────────────────────────────────────────────────────
 LANGUAGE_CODE = 'pt-br'

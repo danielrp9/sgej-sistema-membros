@@ -3,6 +3,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.mixins import AuditLogMixin
+
 from accounts.permissions import IsAdmin, IsAdminOrViewer, IsViewer
 from .models import Certificate
 from .serializers import (
@@ -13,12 +15,10 @@ from .serializers import (
 )
 
 
-class CertificateListCreateView(generics.ListCreateAPIView):
-    """
-    GET  → Lista certificados (ADMIN e VIEWER).
-    POST → Cria certificado (apenas ADMIN).
-    """
+class CertificateListCreateView(generics.ListCreateAPIView, AuditLogMixin):
+
     queryset = Certificate.objects.select_related("member", "approved_by").all()
+    audit_model_name = "Certificate"
 
     def get_permissions(self):
         if self.request.method == "POST":
