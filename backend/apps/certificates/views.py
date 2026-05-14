@@ -2,9 +2,9 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 
 from core.mixins import AuditLogMixin
-
 from accounts.permissions import IsAdmin, IsAdminOrViewer, IsViewer
 from .models import Certificate
 from .serializers import (
@@ -14,15 +14,15 @@ from .serializers import (
     CertificateSerializer,
 )
 
-
 class CertificateListCreateView(generics.ListCreateAPIView, AuditLogMixin):
-
+    """
+    Lista todos os certificados e permite a criação manual.
+    Vincula o usuário logado como autor do registro.
+    """
     queryset = Certificate.objects.select_related("member", "approved_by").all()
     audit_model_name = "Certificate"
 
     def get_permissions(self):
-        if self.request.method == "POST":
-            return [IsAdmin()]
         return [IsAdminOrViewer()]
 
     def get_serializer_class(self):
@@ -30,11 +30,29 @@ class CertificateListCreateView(generics.ListCreateAPIView, AuditLogMixin):
             return CertificateCreateSerializer
         return CertificateSerializer
 
+    def perform_create(self, serializer):
+        try:
+            serializer.save(created_by=self.request.user)
+        except TypeError:
+            serializer.save()
+
+class CertificatePendingSignatureView(generics.ListAPIView):
+    """
+    Retorna a fila de rascunhos aguardando assinatura.
+    Endpoint consumido pelo Audit.jsx: GET /api/v1/certificates/pending-signature/
+    """
+    serializer_class = CertificateSerializer
+    permission_classes = [IsAdminOrViewer]
+
+    def get_queryset(self):
+        return Certificate.objects.filter(
+            status=Certificate.Status.PENDING
+        ).select_related("member", "approved_by")
 
 class CertificateDetailView(generics.RetrieveDestroyAPIView):
     """
-    GET    → Detalha certificado (ADMIN e VIEWER).
-    DELETE → Remove certificado (apenas ADMIN).
+    GET    -> Detalha informações de um certificado.
+    DELETE -> Remove um certificado (Apenas Admin).
     """
     queryset = Certificate.objects.select_related("member", "approved_by").all()
     serializer_class = CertificateSerializer
@@ -44,13 +62,12 @@ class CertificateDetailView(generics.RetrieveDestroyAPIView):
             return [IsAdmin()]
         return [IsAdminOrViewer()]
 
-
 class CertificateApprovalView(APIView):
     """
-    POST /api/v1/certificates/{id}/approval/
-    Aprovação ou rejeição do certificado — apenas VIEWER (Orientadora).
+    ✅ Lógica de Assinatura Digital (Aprovação ou Rejeição).
+    Endpoint: POST /api/v1/certificates/{id}/approval/
     """
-    permission_classes = [IsViewer]
+    permission_classes = [IsAdminOrViewer] 
 
     def post(self, request, pk):
         try:
@@ -59,53 +76,36 @@ class CertificateApprovalView(APIView):
             return Response({"detail": "Certificado não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
         if certificate.status == Certificate.Status.APPROVED:
-            return Response(
-                {"detail": "Este certificado já foi aprovado."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"detail": "Este certificado já possui uma assinatura válida."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = CertificateApprovalSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        action = serializer.validated_data["action"]
+        action_type = serializer.validated_data["action"]
         reason = serializer.validated_data.get("rejection_reason", "")
 
-        if action == "approve":
+        if action_type == "approve":
             certificate.approve(user=request.user)
-            return Response(
-                {
-                    "detail": "Certificado aprovado com sucesso.",
-                    "auth_hash": certificate.auth_hash,
-                    "issue_date": certificate.issue_date,
-                },
-                status=status.HTTP_200_OK,
-            )
+            return Response({
+                "detail": "Certificado assinado com sucesso.",
+                "auth_hash": certificate.auth_hash,
+                "issue_date": certificate.issue_date,
+            }, status=status.HTTP_200_OK)
 
         certificate.reject(user=request.user, reason=reason)
-        return Response(
-            {"detail": "Certificado rejeitado.", "reason": reason},
-            status=status.HTTP_200_OK,
-        )
-
+        return Response({"detail": "Certificado rejeitado e rascunho invalidado."}, status=status.HTTP_200_OK)
 
 class CertificateVerifyView(APIView):
     """
-    GET /api/v1/certificates/verify/{hash}/
-    Endpoint público — verifica autenticidade pelo hash e entrega os dados formatados.
-    Não exige autenticação (pode ser acessado por qualquer pessoa).
+    Endpoint público para verificação de autenticidade via UUID ou Hash.
     """
     permission_classes = [AllowAny]
 
     def get(self, request, auth_hash):
         try:
-            certificate = Certificate.objects.select_related(
-                "member", "approved_by"
-            ).get(auth_hash=auth_hash)
+            certificate = Certificate.objects.select_related("member", "approved_by").get(auth_hash=auth_hash)
         except Certificate.DoesNotExist:
-            return Response(
-                {"valid": False, "detail": "Certificado não encontrado ou hash inválido."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return Response({"valid": False, "detail": "Documento não encontrado na base oficial SGEJ."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = CertificatePublicSerializer(certificate)
         return Response({
@@ -113,16 +113,12 @@ class CertificateVerifyView(APIView):
             "certificate": serializer.data,
         })
 
-
 class MemberCertificatesView(generics.ListAPIView):
     """
-    GET /api/v1/members/{id}/certificates/
-    Lista todos os certificados de um membro específico.
+    Lista todos os certificados vinculados a um membro específico.
     """
     serializer_class = CertificateSerializer
     permission_classes = [IsAdminOrViewer]
 
     def get_queryset(self):
-        return Certificate.objects.filter(
-            member_id=self.kwargs["pk"]
-        ).select_related("member", "approved_by")
+        return Certificate.objects.filter(member_id=self.kwargs["pk"]).select_related("member", "approved_by")

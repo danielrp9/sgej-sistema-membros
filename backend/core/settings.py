@@ -10,10 +10,10 @@ SECRET_KEY = 'django-insecure-chave-temporaria-para-desenvolvimento'
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
-# ── Aplicações ────────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
+    'whitenoise.runserver_nostatic', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -21,24 +21,23 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Terceiros
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_spectacular',
 
-    # Apps do sistema
     'accounts',
     'members',
     'history',
     'certificates',
-    'core',  # ✅ necessário para o AuditLog
+    'core',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -52,7 +51,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR.parent / 'frontend' / 'dist'], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,7 +66,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# ── Banco de dados ────────────────────────────────────────────────────────────
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -75,10 +73,8 @@ DATABASES = {
     }
 }
 
-# ── Usuário customizado ───────────────────────────────────────────────────────
 AUTH_USER_MODEL = 'accounts.User'
 
-# ── DRF ──────────────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -87,11 +83,9 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    # ✅ handler customizado que padroniza todos os erros
     'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }
 
-# ── SimpleJWT ─────────────────────────────────────────────────────────────────
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -102,78 +96,26 @@ SIMPLE_JWT = {
     'TOKEN_OBTAIN_SERIALIZER': 'accounts.serializers.CustomTokenObtainPairSerializer',
 }
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
 ]
 
-# ── Handlers globais de erro (ativos apenas com DEBUG=False) ──────────────────
-handler404 = 'core.exceptions.handler_404'
-handler500 = 'core.exceptions.handler_500'
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR.parent / 'frontend' / 'dist' / 'static', 
+]
 
-# ── Logging ───────────────────────────────────────────────────────────────────
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '[{levelname}] {asctime} {module} → {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '[{levelname}] {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        # Exibe no terminal
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        # Salva em arquivo (erros graves)
-        'file_errors': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'errors.log',
-            'level': 'ERROR',
-            'formatter': 'verbose',
-        },
-        # Salva todas as requisições
-        'file_general': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'general.log',
-            'level': 'INFO',
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        # Logger padrão do Django
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        # Logger do projeto (use: logging.getLogger('sgej'))
-        'sgej': {
-            'handlers': ['console', 'file_general'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        # Logger de erros
-        'django.request': {
-            'handlers': ['console', 'file_errors'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-    },
-}
+WHITENOISE_INDEX_FILE = True
 
-# ── Internacionalização ───────────────────────────────────────────────────────
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

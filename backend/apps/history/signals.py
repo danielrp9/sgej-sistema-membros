@@ -11,7 +11,6 @@ def registrar_historico_membro(sender, instance, **kwargs):
     Detecta mudanças de status e registra automaticamente no histórico.
     """
 
-    # Se o membro ainda não existe no banco (criação), não faz nada
     if not instance.pk:
         return
 
@@ -23,13 +22,10 @@ def registrar_historico_membro(sender, instance, **kwargs):
     status_anterior = anterior.status
     status_novo = instance.status
 
-    # Sem mudança de status → não registra
     if status_anterior == status_novo:
         return
 
-    # ── ATIVO → INATIVO: registra saída ──────────────────────────────────────
     if status_anterior == Member.Status.ACTIVE and status_novo == Member.Status.INACTIVE:
-        # Fecha o período aberto mais recente (se existir)
         periodo_aberto = (
             MemberHistory.objects
             .filter(member=instance, exit_date__isnull=True)
@@ -48,7 +44,6 @@ def registrar_historico_membro(sender, instance, **kwargs):
             notes=f"Status alterado de Ativo para Inativo.",
         )
 
-    # ── ATIVO → SUSPENSO: registra suspensão ─────────────────────────────────
     elif status_anterior == Member.Status.ACTIVE and status_novo == Member.Status.SUSPENDED:
         MemberHistory.objects.create(
             member=instance,
@@ -58,7 +53,6 @@ def registrar_historico_membro(sender, instance, **kwargs):
             notes=f"Status alterado de Ativo para Suspenso.",
         )
 
-    # ── INATIVO/SUSPENSO → ATIVO: registra reentrada ─────────────────────────
     elif status_anterior in (Member.Status.INACTIVE, Member.Status.SUSPENDED) and status_novo == Member.Status.ACTIVE:
         MemberHistory.objects.create(
             member=instance,

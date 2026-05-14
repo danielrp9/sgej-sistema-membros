@@ -7,7 +7,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# ── Handlers globais Django (para DEBUG=False) ────────────────────────────────
 
 def handler_404(request, exception=None):
     """Handler global para rotas não encontradas."""
@@ -33,7 +32,6 @@ def handler_500(request):
     )
 
 
-# ── Handler customizado do DRF ────────────────────────────────────────────────
 
 def custom_exception_handler(exc, context):
     """
@@ -48,7 +46,6 @@ def custom_exception_handler(exc, context):
     if response is not None:
         error_code = _get_error_code(response.status_code)
 
-        # Normaliza o campo 'detail' para sempre ser string
         detail = response.data
         if isinstance(detail, dict) and "detail" in detail:
             detail = str(detail["detail"])
@@ -61,7 +58,6 @@ def custom_exception_handler(exc, context):
             "status_code": response.status_code,
         }
 
-        # Loga erros 5xx
         if response.status_code >= 500:
             logger.error(
                 f"[{response.status_code}] {getattr(request, 'method', '')} "

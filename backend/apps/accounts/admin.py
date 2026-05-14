@@ -7,13 +7,11 @@ from .models import User
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    # Campos exibidos na listagem
     list_display = ["email", "first_name", "last_name", "role", "is_active", "date_joined"]
     list_filter = ["role", "is_active", "is_staff"]
     search_fields = ["email", "first_name", "last_name"]
     ordering = ["email"]
 
-    # Formulário de edição
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         (_("Informações pessoais"), {"fields": ("first_name", "last_name")}),
@@ -33,7 +31,6 @@ class UserAdmin(BaseUserAdmin):
         (_("Datas"), {"fields": ("last_login", "date_joined")}),
     )
 
-    # Formulário de criação
     add_fieldsets = (
         (
             None,

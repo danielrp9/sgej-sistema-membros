@@ -11,7 +11,6 @@ class Certificate(models.Model):
         APPROVED = "APPROVED", "Aprovado"
         REJECTED = "REJECTED", "Rejeitado"
 
-    # ── Relacionamentos ───────────────────────────────────────────────────────
     member = models.ForeignKey(
         "members.Member",
         on_delete=models.CASCADE,
@@ -28,12 +27,10 @@ class Certificate(models.Model):
         limit_choices_to={"role": "VIEWER"},  # apenas Orientadora pode aprovar
     )
 
-    # ── Dados do certificado ──────────────────────────────────────────────────
     title = models.CharField("Título", max_length=200)
     description = models.TextField("Descrição", blank=True)
     issue_date = models.DateField("Data de Emissão", null=True, blank=True)
 
-    # ── Aprovação ─────────────────────────────────────────────────────────────
     is_approved = models.BooleanField("Aprovado", default=False)
     status = models.CharField(
         "Status",
@@ -44,7 +41,6 @@ class Certificate(models.Model):
     approved_at = models.DateTimeField("Aprovado em", null=True, blank=True)
     rejection_reason = models.TextField("Motivo da Rejeição", blank=True)
 
-    # ── Hash de autenticidade ─────────────────────────────────────────────────
     auth_hash = models.CharField(
         "Hash de Autenticidade",
         max_length=64,
@@ -58,7 +54,6 @@ class Certificate(models.Model):
         editable=False,
     )
 
-    # ── Controle ──────────────────────────────────────────────────────────────
     created_at = models.DateTimeField("Criado em", auto_now_add=True)
     updated_at = models.DateTimeField("Atualizado em", auto_now=True)
 
@@ -70,7 +65,6 @@ class Certificate(models.Model):
     def __str__(self):
         return f"{self.title} — {self.member.name}"
 
-    # ── Geração do hash ───────────────────────────────────────────────────────
     def generate_auth_hash(self):
         """
         Gera um hash SHA-256 único baseado em:
@@ -92,14 +86,11 @@ class Certificate(models.Model):
         return hashlib.sha256(raw.encode()).hexdigest()
 
     def save(self, *args, **kwargs):
-        # Gera o hash na primeira vez que o certificado é salvo
         if not self.auth_hash:
-            # Salva primeiro para garantir que created_at existe
             super().save(*args, **kwargs)
             self.auth_hash = self.generate_auth_hash()
             kwargs["force_insert"] = False
 
-        # Sincroniza is_approved com o status
         if self.status == self.Status.APPROVED:
             self.is_approved = True
             if not self.issue_date:
@@ -109,7 +100,6 @@ class Certificate(models.Model):
 
         super().save(*args, **kwargs)
 
-    # ── Aprovação / Rejeição ──────────────────────────────────────────────────
     def approve(self, user):
         """Aprova o certificado. Deve ser chamado pela Orientadora (VIEWER)."""
         self.status = self.Status.APPROVED

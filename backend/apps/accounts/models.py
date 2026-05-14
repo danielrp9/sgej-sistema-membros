@@ -34,7 +34,6 @@ class User(AbstractUser):
         ADMIN = "ADMIN", "Diretoria"
         VIEWER = "VIEWER", "Orientadora"
 
-    # Remove username — login será feito via e-mail
     username = None
 
     email = models.EmailField("E-mail", unique=True)

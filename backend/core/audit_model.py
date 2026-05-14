@@ -15,7 +15,6 @@ class AuditLog(models.Model):
         APPROVE = "APPROVE", "Aprovação"
         REJECT  = "REJECT",  "Rejeição"
 
-    # Quem fez
     user = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -27,16 +26,13 @@ class AuditLog(models.Model):
     user_email = models.EmailField("E-mail do usuário", blank=True)
     user_role = models.CharField("Role do usuário", max_length=10, blank=True)
 
-    # O que fez
     action = models.CharField("Ação", max_length=10, choices=Action.choices)
     model_name = models.CharField("Model", max_length=100, blank=True)
     object_id = models.CharField("ID do objeto", max_length=50, blank=True)
     object_repr = models.CharField("Representação do objeto", max_length=255, blank=True)
 
-    # Dados alterados
     changes = models.JSONField("Alterações", default=dict, blank=True)
 
-    # Contexto da requisição
     ip_address = models.GenericIPAddressField("IP", null=True, blank=True)
     user_agent = models.CharField("User-Agent", max_length=255, blank=True)
     endpoint = models.CharField("Endpoint", max_length=255, blank=True)

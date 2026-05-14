@@ -21,7 +21,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        # Inclui informações do usuário na resposta do login
         data["user"] = {
             "id": self.user.id,
             "email": self.user.email,

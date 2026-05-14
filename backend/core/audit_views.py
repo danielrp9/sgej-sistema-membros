@@ -7,7 +7,6 @@ from accounts.permissions import IsAdmin
 from core.models import AuditLog
 
 
-# ── Serializer ────────────────────────────────────────────────────────────────
 
 class AuditLogSerializer(serializers.ModelSerializer):
     action_display = serializers.CharField(source="get_action_display", read_only=True)
@@ -31,7 +30,6 @@ class AuditLogSerializer(serializers.ModelSerializer):
         ]
 
 
-# ── Views ─────────────────────────────────────────────────────────────────────
 
 class AuditLogListView(generics.ListAPIView):
     """

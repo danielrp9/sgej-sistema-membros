@@ -44,7 +44,6 @@ class ChangePasswordView(APIView):
         return Response({"detail": "Senha alterada com sucesso."}, status=status.HTTP_200_OK)
 
 
-# ── Gerenciamento de usuários (apenas ADMIN) ──────────────────────────────────
 
 class UserListCreateView(generics.ListCreateAPIView):
     """
