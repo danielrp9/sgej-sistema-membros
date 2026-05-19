@@ -24,7 +24,7 @@ export default function CertificateAudit() {
 
   useEffect(() => { loadPending(); }, []);
 
-  // ✅ Abre o PDF em nova aba sem forçar download para revisão
+
   const handlePreview = async (certificate) => {
     try {
       const doc = <CertificateTemplate certificate={certificate} />;
@@ -42,7 +42,6 @@ export default function CertificateAudit() {
     if (!window.confirm("Confirmar assinatura digital oficial? O certificado será movido para o arquivo permanente.")) return;
     setSigningId(certId);
     try {
-      // ✅ Aciona o backend para mudar status para APPROVED e gerar Hash
       await certificateService.signCertificate(certId, { action: 'approve' });
       setPending(prev => prev.filter(c => c.id !== certId));
       alert("Sucesso! Certificado assinado e disponível no histórico.");
@@ -56,14 +55,14 @@ export default function CertificateAudit() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Cabeçalho com Navegação para Histórico */}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-brand-dark uppercase font-nasa tracking-tight">
             Central de Assinaturas
           </h1>
           <p className="text-[10px] text-brand-muted mt-1 font-black uppercase tracking-widest italic tracking-[0.2em]">
-            Fila de Validação • Next Step Tech
+            Fila de Validação • Next Step
           </p>
         </div>
 

@@ -18,7 +18,7 @@ export default function AddMemberModal({ isOpen, onClose, onRefresh }) {
 
   // Função para aplicar máscara de CPF (000.000.000-00)
   const handleCpfChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é dígito
+    let value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) {
       value = value.replace(/(\={3})(\={3})(\={3})(\={2})/, "$1.$2.$3-$4");
       setFormData({ ...formData, cpf: value });
@@ -54,7 +54,7 @@ export default function AddMemberModal({ isOpen, onClose, onRefresh }) {
             </div>
             <div>
               <h2 className="text-sm font-black text-brand-dark uppercase tracking-tight">Novo Colaborador</h2>
-              <p className="text-[10px] text-brand-muted font-bold uppercase tracking-widest">Cadastro NextStep Tech</p>
+              <p className="text-[10px] text-brand-muted font-bold uppercase tracking-widest">Cadastro NextStep</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-xl transition-colors">

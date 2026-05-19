@@ -8,44 +8,62 @@ import CertificateAudit from "./pages/Certificates/Audit";
 import CertificateSubmit from "./pages/Certificates/Submit";
 import CertificateHistory from './pages/Certificates/CertificateHistory';
 
+// ✅ Caminho atualizado apontando para a nova pasta 'Public' em 'src/pages'
+import PublicVerifyPage from "./pages/Certificates/PublicVerifyPage";
+import NextStepSocial from "./pages/Public/NextStepSocial";
+
 export default function App() {
   const isAuthenticated = !!localStorage.getItem("@SGEJ:token");
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota de Autenticação */}
-        <Route 
-          path="/login" 
-          element={!isAuthenticated ? <Login /> : <Navigate to="/" />} 
-        />
-        
-        {/* Rotas Protegidas e com Layout (Menu Lateral + Header)
-          Tudo que estiver dentro deste Route herdará o Sidebar e o Outlet
+        {/* ROTA RAIZ DA APLICAÇÃO
+          Se NÃO estiver logado: Abre a página institucional/social com o verificador por hash.
+          Se ESTIVER logado: Redireciona automaticamente para o Dashboard interno protegido.
         */}
         <Route 
           path="/" 
+          element={!isAuthenticated ? <NextStepSocial /> : <Navigate to="/dashboard" />} 
+        />
+
+        {/* Rota de Autenticação */}
+        <Route 
+          path="/login" 
+          element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} 
+        />
+        
+        {/* Rota Pública de Validação Instantânea (Acessível via QR Code ou Link) */}
+        <Route 
+          path="/verificar/:uuid" 
+          element={<PublicVerifyPage />} 
+        />
+        
+        {/* VINCULAÇÃO DO LAYOUT (Área Restrita / Administrativa)
+          Tudo dentro deste bloco exige autenticação e herdará o menu lateral.
+        */}
+        <Route 
           element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}
         >
-          {/* Dashboard Principal */}
-          <Route index element={<Dashboard />} />
+          {/* Dashboard agora responde em /dashboard se o usuário estiver logado */}
+          <Route path="dashboard" element={<Dashboard />} />
           
           {/* Módulo de Membros */}
           <Route path="members" element={<Members />} />
           <Route path="members/:id" element={<MemberDetail />} />
           
-          {/* Módulo de Certificados - Auditoria */}
+          {/* Módulo de Certificados - Fila de Assinaturas */}
           <Route path="audit" element={<CertificateAudit />} />
           
-          {/* Módulo de Certificados - Histórico Permanente (Corrigido para dentro do Layout) */}
+          {/* Módulo de Certificados - Histórico Permanente */}
           <Route path="history-certificates" element={<CertificateHistory />} />
           
-          {/* Outras rotas auxiliares */}
+          {/* Rota Auxiliar */}
           <Route path="certificates" element={<CertificateSubmit />} />
         </Route>
 
         {/* Redirecionamento Padrão */}
-        <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} />} />
       </Routes>
     </BrowserRouter>
   );

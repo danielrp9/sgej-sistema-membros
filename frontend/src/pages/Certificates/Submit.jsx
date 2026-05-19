@@ -11,8 +11,8 @@ export default function CertificateSubmit() {
   const [showDropdown, setShowDropdown] = useState(false);
   
   const [formData, setFormData] = useState({
-    member: '',      // ID do membro para o banco
-    memberName: '',  // Nome para exibição no campo
+    member: '',      
+    memberName: '', 
     title: '',
     hours: '',
     file: null

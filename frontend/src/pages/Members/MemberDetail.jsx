@@ -15,7 +15,7 @@ export default function MemberDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [member, setMember] = useState(null);
-  const [history, setHistory] = useState([]); // ✅ Inicializado como array vazio para evitar erro no .map
+  const [history, setHistory] = useState([]); 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function MemberDetail() {
         ]);
         
         setMember(memberRes.data);
-        setHistory(Array.isArray(historyRes.data) ? historyRes.data : []); // ✅ Garante que seja um array
+        setHistory(Array.isArray(historyRes.data) ? historyRes.data : []); 
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
       } finally {

@@ -36,14 +36,14 @@ export default function Members() {
   }, [search]);
 
   const handleTerminate = async (id, name) => {
-    // Mensagem clara sobre a geração automática baseada em 6h/semanais
+
     const confirmMessage = `Deseja encerrar as atividades de ${name}?\n\nO sistema calculará automaticamente a carga horária (6h/semanais) e gerará o rascunho do certificado para assinatura do orientador.`;
     
     if (window.confirm(confirmMessage)) {
       setLoadingId(id);
       setActiveMenu(null);
       try {
-        // Dispara o POST para o Django realizar o cálculo e criar o registro de certificado
+
         await memberService.terminateMember(id);
         alert("Sucesso! Atividades encerradas e certificado enviado para a Central de Assinaturas.");
         loadMembers(search); 
@@ -64,7 +64,7 @@ export default function Members() {
             Gestão de Membros
           </h1>
           <p className="text-xs text-brand-muted mt-1 font-medium italic">
-            Base de dados operacional • NextStep Tech
+            Base de dados operacional • NextStep
           </p>
         </div>
         <div className="flex gap-3">
