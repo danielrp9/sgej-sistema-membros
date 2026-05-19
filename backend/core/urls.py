@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from core.audit_views import AuditLogListView, AuditLogStatsView
+from certificates.views import CertificateVerifyView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -12,13 +13,19 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 
+    re_path(
+        r'^api/v1/public/verify/(?P<auth_hash>[\w-]+)/?$', 
+        CertificateVerifyView.as_view(), 
+        name='certificate-public-verify'
+    ),
+
+    # Módulos de API do Ecossistema SGEJ
     path('api/v1/auth/', include('accounts.urls')),
     path('api/v1/members/', include('members.urls')),
     path('api/v1/history/', include('history.urls')),
     path('api/v1/certificates/', include('certificates.urls')),
     path('api/v1/audit/', AuditLogListView.as_view(), name='audit_list'),
     path('api/v1/audit/stats/', AuditLogStatsView.as_view(), name='audit_stats'),
-
 ] 
 
 if settings.DEBUG:

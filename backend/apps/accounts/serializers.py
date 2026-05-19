@@ -7,8 +7,7 @@ User = get_user_model()
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
-    Adiciona dados extras ao payload do JWT:
-    id, email, nome completo e role.
+    Injeta metadados de identificação e cargo no token JWT.
     """
 
     @classmethod

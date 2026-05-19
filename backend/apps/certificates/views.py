@@ -1,11 +1,12 @@
+import uuid
+from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import action
 
 from core.mixins import AuditLogMixin
-from accounts.permissions import IsAdmin, IsAdminOrViewer, IsViewer
+from accounts.permissions import IsAdmin, IsAdminOrViewer
 from .models import Certificate
 from .serializers import (
     CertificateApprovalSerializer,
@@ -16,10 +17,9 @@ from .serializers import (
 
 class CertificateListCreateView(generics.ListCreateAPIView, AuditLogMixin):
     """
-    Lista todos os certificados e permite a criação manual.
-    Vincula o usuário logado como autor do registro.
+    Lista todos os certificados e permite a criação manual pelo painel.
     """
-    queryset = Certificate.objects.select_related("member", "approved_by").all()
+    queryset = Certificate.objects.select_related("member", "signed_by_president", "signed_by_director", "signed_by_orientador").all()
     audit_model_name = "Certificate"
 
     def get_permissions(self):
@@ -31,30 +31,26 @@ class CertificateListCreateView(generics.ListCreateAPIView, AuditLogMixin):
         return CertificateSerializer
 
     def perform_create(self, serializer):
-        try:
-            serializer.save(created_by=self.request.user)
-        except TypeError:
-            serializer.save()
+        serializer.save()
 
 class CertificatePendingSignatureView(generics.ListAPIView):
     """
-    Retorna a fila de rascunhos aguardando assinatura.
-    Endpoint consumido pelo Audit.jsx: GET /api/v1/certificates/pending-signature/
+    Retorna a fila de rascunhos pendentes ou parciais para auditoria.
+    Filtra qualquer um que não esteja totalmente aprovado ou rejeitado.
     """
     serializer_class = CertificateSerializer
     permission_classes = [IsAdminOrViewer]
 
     def get_queryset(self):
         return Certificate.objects.filter(
-            status=Certificate.Status.PENDING
-        ).select_related("member", "approved_by")
+            status__in=[Certificate.Status.PENDING, Certificate.Status.PARTIAL]
+        ).select_related("member", "signed_by_president", "signed_by_director", "signed_by_orientador")
 
 class CertificateDetailView(generics.RetrieveDestroyAPIView):
     """
-    GET    -> Detalha informações de um certificado.
-    DELETE -> Remove um certificado (Apenas Admin).
+    Detalha ou remove um registro de certificado específico.
     """
-    queryset = Certificate.objects.select_related("member", "approved_by").all()
+    queryset = Certificate.objects.select_related("member", "signed_by_president", "signed_by_director", "signed_by_orientador").all()
     serializer_class = CertificateSerializer
 
     def get_permissions(self):
@@ -64,7 +60,7 @@ class CertificateDetailView(generics.RetrieveDestroyAPIView):
 
 class CertificateApprovalView(APIView):
     """
-    ✅ Lógica de Assinatura Digital (Aprovação ou Rejeição).
+    Coleta assinaturas digitais cumulativas de forma assíncrona.
     Endpoint: POST /api/v1/certificates/{id}/approval/
     """
     permission_classes = [IsAdminOrViewer] 
@@ -76,36 +72,67 @@ class CertificateApprovalView(APIView):
             return Response({"detail": "Certificado não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
         if certificate.status == Certificate.Status.APPROVED:
-            return Response({"detail": "Este certificado já possui uma assinatura válida."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Este certificado já concluiu o fluxo de assinaturas e foi selado."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = CertificateApprovalSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         action_type = serializer.validated_data["action"]
-        reason = serializer.validated_data.get("rejection_reason", "")
+        role = serializer.validated_data.get("role")
+        reason = serializer.validated_data.get("reason", "")
 
         if action_type == "approve":
-            certificate.approve(user=request.user)
+            if not role:
+                return Response({"detail": "Identifique a role correspondente para assinar."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Executa a coleta no respectivo slot do modelo
+            certificate.collect_signature(user=request.user, role=role)
             return Response({
-                "detail": "Certificado assinado com sucesso.",
-                "auth_hash": certificate.auth_hash,
-                "issue_date": certificate.issue_date,
+                "detail": f"Assinatura como {role} registrada com sucesso.",
+                "status": certificate.status,
+                "is_approved": certificate.is_approved,
+                "auth_hash": certificate.auth_hash
             }, status=status.HTTP_200_OK)
 
+    
         certificate.reject(user=request.user, reason=reason)
-        return Response({"detail": "Certificado rejeitado e rascunho invalidado."}, status=status.HTTP_200_OK)
+        return Response({"detail": "Certificado rejeitado e assinaturas parciais limpas."}, status=status.HTTP_200_OK)
 
 class CertificateVerifyView(APIView):
     """
-    Endpoint público para verificação de autenticidade via UUID ou Hash.
+    Endpoint público consultado pelo validador hash ou QR code.
+    Suporta de forma inteligente buscas tanto pelo auth_hash quanto pelo auth_uuid.
     """
     permission_classes = [AllowAny]
 
     def get(self, request, auth_hash):
+        lookup_value = auth_hash.strip()
+
         try:
-            certificate = Certificate.objects.select_related("member", "approved_by").get(auth_hash=auth_hash)
+            if len(lookup_value) == 64:
+                certificate = Certificate.objects.select_related(
+                    "member", "signed_by_president", "signed_by_director", "signed_by_orientador"
+                ).get(
+                    Q(auth_hash=lookup_value.lower()) | 
+                    Q(auth_hash=lookup_value.upper()) |
+                    Q(auth_hash__iexact=lookup_value)
+                )
+            
+            else:
+                # 2. Caso contrário, tenta efetuar a busca pelo UUID do rascunho provisório
+                try:
+                    uuid_obj = uuid.UUID(lookup_value)
+                    certificate = Certificate.objects.select_related(
+                        "member", "signed_by_president", "signed_by_director", "signed_by_orientador"
+                ).get(auth_uuid=uuid_obj)
+                except (ValueError, TypeError):
+                    raise Certificate.DoesNotExist
+
         except Certificate.DoesNotExist:
-            return Response({"valid": False, "detail": "Documento não encontrado na base oficial SGEJ."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "valid": False, 
+                "detail": "Documento não encontrado na base oficial SGEJ."
+            }, status=status.HTTP_404_NOT_FOUND)
 
         serializer = CertificatePublicSerializer(certificate)
         return Response({
@@ -115,10 +142,12 @@ class CertificateVerifyView(APIView):
 
 class MemberCertificatesView(generics.ListAPIView):
     """
-    Lista todos os certificados vinculados a um membro específico.
+    Retorna todos os certificados emitidos a um membro.
     """
     serializer_class = CertificateSerializer
     permission_classes = [IsAdminOrViewer]
 
     def get_queryset(self):
-        return Certificate.objects.filter(member_id=self.kwargs["pk"]).select_related("member", "approved_by")
+        return Certificate.objects.filter(member_id=self.kwargs["pk"]).select_related(
+            "member", "signed_by_president", "signed_by_director", "signed_by_orientador"
+        )

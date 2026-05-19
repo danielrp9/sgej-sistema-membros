@@ -1,21 +1,52 @@
-from django.urls import path
+from django.urls import path, re_path
 from .views import (
     CertificateListCreateView,
     CertificateDetailView,
     CertificateApprovalView,
     CertificateVerifyView,
     MemberCertificatesView,
-    CertificatePendingSignatureView, # ✅ Importada a nova View
+    CertificatePendingSignatureView,
 )
 
+app_name = "certificates"
+
 urlpatterns = [
-    path("pending-signature/", CertificatePendingSignatureView.as_view(), name="certificate_pending_signature"),
+    path(
+        "pending-signature/", 
+        CertificatePendingSignatureView.as_view(), 
+        name="pending-signature"
+    ),
 
-    path("", CertificateListCreateView.as_view(), name="certificate_list_create"),
-    path("<int:pk>/", CertificateDetailView.as_view(), name="certificate_detail"),
-    path("<int:pk>/approval/", CertificateApprovalView.as_view(), name="certificate_approval"),
 
-    path("verify/<str:auth_hash>/", CertificateVerifyView.as_view(), name="certificate_verify"),
+    path(
+        "", 
+        CertificateListCreateView.as_view(), 
+        name="list-create"
+    ),
+    
 
-    path("members/<int:pk>/", MemberCertificatesView.as_view(), name="member_certificates"),
+    path(
+        "<int:pk>/", 
+        CertificateDetailView.as_view(), 
+        name="detail"
+    ),
+    
+    path(
+        "<int:pk>/approval/", 
+        CertificateApprovalView.as_view(), 
+        name="approval"
+    ),
+
+
+    re_path(
+        r'^public/verify/(?P<auth_hash>[\w-]+)/?$', 
+        CertificateVerifyView.as_view(), 
+        name="verify"
+    ),
+
+    path(
+        "member/<int:pk>/", 
+        MemberCertificatesView.as_view(), 
+        name="member-certificates"
+    ),
 ]
