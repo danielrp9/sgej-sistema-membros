@@ -144,7 +144,7 @@ export default function PublicVerifyPage() {
                   <p className="text-[9px] text-gray-400 mt-1 leading-normal">
                     ✓ {certData.president_name} (Presidente) <br />
                     ✓ {certData.director_name} (Recursos Humanos) <br />
-                    ✓ {certData.orientador_name} (Orientadora PROAAE)
+                    ✓ {certData.orientador_name} (Orientadora EJ)
                   </p>
                 </div>
               </div>
