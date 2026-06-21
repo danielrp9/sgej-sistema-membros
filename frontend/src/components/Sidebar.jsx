@@ -90,7 +90,9 @@ export default function Sidebar({ onClose }) {
         <button 
           onClick={() => { 
             localStorage.removeItem("@SGEJ:token"); 
-            window.location.reload(); 
+            localStorage.removeItem("@SGEJ:user_role");
+            localStorage.removeItem("@SGEJ:user");
+            window.location.href = '/'; 
           }}
           className="w-full flex items-center gap-3 px-5 py-3 text-gray-400 hover:text-red-400 hover:bg-red-500/5 rounded-2xl transition-all group"
         >

@@ -20,7 +20,9 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem("@SGEJ:token");
-      window.location.href = '/login';
+      localStorage.removeItem("@SGEJ:user_role");
+      localStorage.removeItem("@SGEJ:user");
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }
