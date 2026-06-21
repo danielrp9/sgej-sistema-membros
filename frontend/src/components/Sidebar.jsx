@@ -77,7 +77,7 @@ export default function Sidebar({ onClose }) {
         
         {user?.role !== "orientador" && (
           <a 
-            href="/admin/" 
+            href={import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api/v1', '') + '/admin/' : '/admin/'} 
             onClick={onClose}
             className="flex items-center gap-3 px-5 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl transition-all group"
           >
