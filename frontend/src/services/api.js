@@ -22,7 +22,7 @@ api.interceptors.response.use(
       localStorage.removeItem("@SGEJ:token");
       localStorage.removeItem("@SGEJ:user_role");
       localStorage.removeItem("@SGEJ:user");
-      window.location.href = '/';
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
