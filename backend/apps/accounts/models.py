@@ -46,9 +46,15 @@ class User(AbstractUser):
     )
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["first_name", "last_name"]
 
     objects = UserManager()
+
+    def get_full_name(self):
+        full_name = f"{self.first_name} {self.last_name}".strip()
+        if not full_name:
+            return self.email.split("@")[0].capitalize()
+        return full_name
 
     class Meta:
         verbose_name = "Usuário"
