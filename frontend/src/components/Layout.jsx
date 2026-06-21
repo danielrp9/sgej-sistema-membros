@@ -117,7 +117,7 @@ export default function Layout() {
                 {showNotifications && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)}></div>
-                    <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="fixed top-20 right-4 left-4 md:absolute md:top-auto md:right-0 md:left-auto md:w-80 md:mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="px-4 py-2 border-b border-gray-50 flex items-center justify-between">
                         <span className="font-bold text-xs text-gray-800">Notificações</span>
                         <button 
