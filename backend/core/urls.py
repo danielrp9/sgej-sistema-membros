@@ -1,7 +1,8 @@
+import os
 from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include, re_path
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from core.audit_views import AuditLogListView, AuditLogStatsView
@@ -32,6 +33,14 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-urlpatterns += [
-    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'), name='index'),
-]
+# Verifica se o frontend está compilado localmente
+FRONTEND_DIR = settings.BASE_DIR.parent / 'frontend' / 'dist'
+if os.path.exists(FRONTEND_DIR / 'index.html'):
+    urlpatterns += [
+        re_path(r'^.*$', TemplateView.as_view(template_name='index.html'), name='index'),
+    ]
+else:
+    # Se o frontend não estiver aqui (deploy híbrido), redireciona a raiz para o admin
+    urlpatterns += [
+        path('', RedirectView.as_view(url='/admin/', permanent=False)),
+    ]
