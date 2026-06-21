@@ -44,3 +44,9 @@ else:
     urlpatterns += [
         path('', RedirectView.as_view(url='/admin/', permanent=False)),
     ]
+
+# Personaliza o link "Ver o site" no Django Admin
+if settings.DEBUG:
+    admin.site.site_url = '/'
+else:
+    admin.site.site_url = os.environ.get('FRONTEND_URL', 'https://sgej-sistema-membros.onrender.com')
