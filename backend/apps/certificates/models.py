@@ -158,3 +158,24 @@ class Certificate(models.Model):
             f"{self.issue_date.strftime('%Y%m%d')}"
         )
         return hashlib.sha256(salt_string.encode("utf-8")).hexdigest().upper()
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Certificate)
+def create_certificate_notifications(sender, instance, created, **kwargs):
+    if created and instance.status == Certificate.Status.PENDING:
+        from django.contrib.auth import get_user_model
+        from accounts.models import Notification
+        
+        User = get_user_model()
+        users = User.objects.filter(role__in=["president", "orientador", "director"], is_active=True)
+        
+        for user in users:
+            Notification.objects.create(
+                user=user,
+                title="Assinatura Pendente",
+                message=f"O certificado de {instance.member.name} foi gerado e precisa de sua assinatura.",
+                certificate_id=instance.id
+            )

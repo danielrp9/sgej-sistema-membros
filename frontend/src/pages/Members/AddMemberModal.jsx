@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, UserPlus, Loader2, CreditCard, GraduationCap, Briefcase } from 'lucide-react';
 import { memberService } from '../../services/members';
 
@@ -16,11 +17,17 @@ export default function AddMemberModal({ isOpen, onClose, onRefresh }) {
     status: 'ACTIVE'
   });
 
-  // Função para aplicar máscara de CPF (000.000.000-00)
+  // Função para aplicar máscara de CPF (000.000.000-00) de forma progressiva
   const handleCpfChange = (e) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) {
-      value = value.replace(/(\={3})(\={3})(\={3})(\={2})/, "$1.$2.$3-$4");
+      if (value.length > 9) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})$/, "$1.$2.$3-$4");
+      } else if (value.length > 6) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, "$1.$2.$3");
+      } else if (value.length > 3) {
+        value = value.replace(/^(\d{3})(\d{1,3})$/, "$1.$2");
+      }
       setFormData({ ...formData, cpf: value });
     }
   };
@@ -42,8 +49,8 @@ export default function AddMemberModal({ isOpen, onClose, onRefresh }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-brand-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300">
         
         {/* Header do Modal */}
@@ -202,6 +209,7 @@ export default function AddMemberModal({ isOpen, onClose, onRefresh }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

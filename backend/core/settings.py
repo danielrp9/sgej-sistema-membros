@@ -96,10 +96,15 @@ SIMPLE_JWT = {
     'TOKEN_OBTAIN_SERIALIZER': 'accounts.serializers.CustomTokenObtainPairSerializer',
 }
 
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOW_ALL_ORIGINS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.app",
+    "https://*.ngrok.io",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://localhost:8000",
 ]
 
 STATIC_URL = 'static/'

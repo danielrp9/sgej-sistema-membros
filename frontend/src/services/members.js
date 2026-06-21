@@ -21,4 +21,10 @@ export const memberService = {
    * Dispara o cálculo de 6h semanais no Django e gera rascunho do certificado.
    */
   terminateMember: (id) => api.post(`/members/${id}/terminate/`),
+
+  // Suspende o membro com o motivo especificado (POST)
+  suspendMember: (id, reason) => api.post(`/members/${id}/suspend/`, { reason }),
+
+  // Aplica uma punição/sanção manual ao membro (POST)
+  addSanction: (id, description) => api.post(`/members/${id}/sanctions/`, { description }),
 };

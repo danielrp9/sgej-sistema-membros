@@ -11,12 +11,14 @@ import CertificateHistory from './pages/Certificates/CertificateHistory';
 // ✅ Caminho atualizado apontando para a nova pasta 'Public' em 'src/pages'
 import PublicVerifyPage from "./pages/Certificates/PublicVerifyPage";
 import NextStepSocial from "./pages/Public/NextStepSocial";
+import { ModalProvider } from "./components/ModalContext";
 
 export default function App() {
   const isAuthenticated = !!localStorage.getItem("@SGEJ:token");
 
   return (
-    <BrowserRouter>
+    <ModalProvider>
+      <BrowserRouter>
       <Routes>
         {/* ROTA RAIZ DA APLICAÇÃO
           Se NÃO estiver logado: Abre a página institucional/social com o verificador por hash.
@@ -66,5 +68,6 @@ export default function App() {
         <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} />} />
       </Routes>
     </BrowserRouter>
+    </ModalProvider>
   );
 }

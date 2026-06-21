@@ -6,16 +6,23 @@ from .views import (
     CertificateVerifyView,
     MemberCertificatesView,
     CertificatePendingSignatureView,
+    CertificateStatsView,
 )
 
 app_name = "certificates"
 
 urlpatterns = [
     path(
+        "stats/",
+        CertificateStatsView.as_view(),
+        name="stats"
+    ),
+    path(
         "pending-signature/", 
         CertificatePendingSignatureView.as_view(), 
         name="pending-signature"
     ),
+
 
 
     path(

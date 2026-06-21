@@ -40,7 +40,7 @@ export default function CertificateHistory() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link to="/audit" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <ArrowLeft size={20} className="text-brand-muted" />
@@ -50,12 +50,12 @@ export default function CertificateHistory() {
             <p className="text-[10px] text-brand-muted font-bold uppercase tracking-widest italic tracking-[0.2em]">Registros oficiais em formato textual</p>
           </div>
         </div>
-        <div className="bg-brand-green/10 px-4 py-2 rounded-2xl border border-brand-green/20">
+        <div className="bg-brand-green/10 px-4 py-2 rounded-2xl border border-brand-green/20 self-start sm:self-auto">
           <p className="text-[10px] font-black text-brand-green uppercase">Total: {history.length} Emitidos</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[24px] md:rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="py-20 text-center">
             <Loader2 className="animate-spin mx-auto text-brand-green" size={40} />
@@ -65,25 +65,25 @@ export default function CertificateHistory() {
             <table className="w-full text-left">
               <thead className="bg-gray-50/50 border-b border-gray-100">
                 <tr>
-                  <th className="px-8 py-5 text-[10px] font-black text-brand-muted uppercase">Membro</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-brand-muted uppercase text-center">Horas</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-brand-muted uppercase">Autenticação (Hash)</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-brand-muted uppercase text-right">Ação</th>
+                  <th className="px-4 py-3 md:px-8 md:py-5 text-[10px] font-black text-brand-muted uppercase">Membro</th>
+                  <th className="px-4 py-3 md:px-8 md:py-5 text-[10px] font-black text-brand-muted uppercase text-center">Horas</th>
+                  <th className="hidden md:table-cell px-4 py-3 md:px-8 md:py-5 text-[10px] font-black text-brand-muted uppercase">Autenticação (Hash)</th>
+                  <th className="px-4 py-3 md:px-8 md:py-5 text-[10px] font-black text-brand-muted uppercase text-right">Ação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 text-brand-dark">
                 {history.map((cert) => (
                   <tr key={cert.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-3 md:px-8 md:py-5">
                       <p className="text-sm font-black uppercase leading-tight">{cert.member?.name}</p>
                       <p className="text-[9px] font-bold text-gray-400 uppercase">{cert.member?.registration}</p>
                     </td>
-                    <td className="px-8 py-5 text-center">
+                    <td className="px-4 py-3 md:px-8 md:py-5 text-center">
                       <span className="text-[10px] font-black bg-brand-green/10 text-brand-green px-3 py-1 rounded-full">
                         {cert.member?.calculated_hours}H
                       </span>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="hidden md:table-cell px-4 py-3 md:px-8 md:py-5">
                       <div className="flex flex-col">
                         <code className="text-[8px] text-gray-400 font-mono break-all">{cert.auth_hash}</code>
                         <p className="text-[8px] font-bold text-brand-muted uppercase mt-1">
@@ -91,7 +91,7 @@ export default function CertificateHistory() {
                         </p>
                       </div>
                     </td>
-                    <td className="px-8 py-5 text-right">
+                    <td className="px-4 py-3 md:px-8 md:py-5 text-right">
                       <button 
                         onClick={() => handleReconstructPDF(cert)}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 text-brand-dark rounded-xl text-[9px] font-black uppercase hover:bg-brand-green hover:text-white transition-all border border-gray-100"

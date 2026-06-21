@@ -3,6 +3,8 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
+from .models import Notification
+
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -93,3 +95,10 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ["id", "title", "message", "is_read", "certificate_id", "created_at"]
+        read_only_fields = ["id", "title", "message", "certificate_id", "created_at"]

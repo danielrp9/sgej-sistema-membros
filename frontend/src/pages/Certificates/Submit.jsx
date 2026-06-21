@@ -79,7 +79,7 @@ export default function CertificateSubmit() {
 
   if (success) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 bg-white rounded-[40px] shadow-sm animate-in zoom-in-95">
+      <div className="flex flex-col items-center justify-center p-8 md:p-20 bg-white rounded-[24px] md:rounded-[40px] shadow-sm animate-in zoom-in-95">
         <CheckCircle size={60} className="text-brand-green mb-4" />
         <h2 className="text-xl font-black text-brand-dark uppercase">Documento Associado!</h2>
         <button onClick={() => setSuccess(false)} className="mt-6 bg-brand-dark text-white px-8 py-3 rounded-2xl font-bold uppercase text-[10px]">Novo Lançamento</button>
@@ -91,7 +91,7 @@ export default function CertificateSubmit() {
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-700">
       <h1 className="text-2xl font-black text-brand-dark uppercase font-nasa tracking-tight">Registro de Certificado</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white p-5 md:p-10 rounded-[24px] md:rounded-[40px] border border-gray-100 shadow-sm space-y-6">
         
         {/* Busca Dinâmica de Membro */}
         <div className="space-y-2 relative">
@@ -145,7 +145,7 @@ export default function CertificateSubmit() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Horas</label>
             <input 

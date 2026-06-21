@@ -1,22 +1,33 @@
 import React from 'react';
 import { Link, useLocation } from "react-router-dom";
-import { LayoutGrid, Users, LogOut, ShieldCheck, FileSignature } from "lucide-react";
+import { LayoutGrid, Users, LogOut, ShieldCheck, FileSignature, UserMinus, AlertTriangle, X } from "lucide-react";
 
 
 import logoImg from '../assets/nexstep-logo.png';
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }) {
   const location = useLocation();
-
+  const userJson = localStorage.getItem("@SGEJ:user");
+  const user = userJson ? JSON.parse(userJson) : null;
 
   const menu = [
     { name: "Dashboard", path: "/", icon: LayoutGrid },
-    { name: "Membros", path: "/members", icon: Users },
+    ...(user?.role !== "orientador" ? [{ name: "Gestão de Membros", path: "/members", icon: Users }] : []),
     { name: "Assinaturas", path: "/audit", icon: FileSignature }, 
   ];
 
+
   return (
-    <aside className="w-64 flex flex-col p-6 h-screen bg-[#111315] text-white border-r border-white/5">
+    <aside className="w-64 flex flex-col p-6 h-screen bg-[#111315] text-white border-r border-white/5 relative">
+      {/* Botão Fechar no Mobile */}
+      <button 
+        onClick={onClose}
+        className="absolute top-6 right-6 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 md:hidden"
+        aria-label="Fechar menu"
+      >
+        <X size={20} />
+      </button>
+
       {/* Brand - Logo + Fonte NASA */}
       <div className="flex items-center gap-3 mb-12 px-2">
         <div className="w-10 h-10 flex items-center justify-center">
@@ -34,19 +45,22 @@ export default function Sidebar() {
       {/* Navegação Principal */}
       <nav className="flex-1 space-y-2">
         <p className="text-[10px] font-black text-gray-600 tracking-[0.2em] px-5 mb-4 uppercase opacity-50">
-          Main Interface
+          Menus de Acesso
         </p>
         
         {menu.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = 
+            (item.path === "/" && (location.pathname === "/" || location.pathname === "/dashboard")) ||
+            (item.path !== "/" && location.pathname.startsWith(item.path));
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-300 group ${
+              onClick={onClose}
+              className={`flex items-center gap-3 py-3.5 pr-5 rounded-2xl transition-all duration-300 group ${
                 isActive 
-                ? 'bg-white/10 text-white shadow-sm ring-1 ring-white/10 font-bold' 
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-brand-green/10 text-white shadow-md ring-1 ring-brand-green/25 font-black border-l-4 border-brand-green pl-4' 
+                : 'text-gray-400 hover:text-white hover:bg-white/5 pl-5'
               }`}
             >
               <item.icon 
@@ -61,13 +75,17 @@ export default function Sidebar() {
 
       <div className="pt-6 border-t border-white/5 space-y-1">
         
-        <a 
-          href="http://localhost:8000/admin/" 
-          className="flex items-center gap-3 px-5 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl transition-all group"
-        >
-          <ShieldCheck size={20} className="group-hover:text-brand-green transition-colors" />
-          <span className="text-sm font-medium">Administração</span>
-        </a>
+        {user?.role !== "orientador" && (
+          <a 
+            href="/admin/" 
+            onClick={onClose}
+            className="flex items-center gap-3 px-5 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl transition-all group"
+          >
+            <ShieldCheck size={20} className="group-hover:text-brand-green transition-colors" />
+            <span className="text-sm font-medium">Administração</span>
+          </a>
+        )}
+
         
         <button 
           onClick={() => { 

@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+
 import { pdf } from '@react-pdf/renderer';
 import { certificateService } from '@/services/certificates';
 import { CertificateTemplate } from './components/CertificateTemplate.jsx';
 import { ShieldCheck, PenTool, Loader2, AlertCircle, FileText, History, Clock, CheckCircle2 } from "lucide-react";
+import { useModal } from '../../components/ModalContext';
 
 export default function CertificateAudit() {
+  const { alert, confirm } = useModal();
+  const location = useLocation();
+  const highlightId = location.state?.highlightId;
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [signingId, setSigningId] = useState(null);
@@ -42,6 +47,18 @@ export default function CertificateAudit() {
 
   useEffect(() => { loadPending(); }, []);
 
+  useEffect(() => {
+    if (highlightId && pending.length > 0) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`cert-card-${highlightId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightId, pending]);
+
   const handlePreview = async (certificate) => {
     try {
       const doc = <CertificateTemplate certificate={certificate} />;
@@ -51,27 +68,27 @@ export default function CertificateAudit() {
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');
     } catch (e) {
-      alert("Erro ao gerar visualização do rascunho.");
+      await alert("Erro ao gerar visualização do rascunho.", "Visualizar Rascunho");
     }
   };
 
   const handleSign = async (certId) => {
     if (!userRole) {
-      alert("Erro de sessão: Cargo do usuário não localizado. Por favor, faça logout e entre novamente.");
+      await alert("Erro de sessão: Cargo do usuário não localizado. Por favor, faça logout e entre novamente.", "Erro de Sessão");
       return;
     }
     
     const roleLabel = userRole === 'president' ? 'Presidência' : userRole === 'director' ? 'Recursos Humanos - RH' : 'Coordenação';
-    if (!window.confirm(`Confirmar assinatura digital oficial no canal da ${roleLabel}?`)) return;
+    if (!await confirm(`Confirmar assinatura digital oficial no canal da ${roleLabel}?`, "Assinatura Digital")) return;
     
     setSigningId(certId);
     try {
       await certificateService.signCertificate(certId, { role: userRole, action: 'approve' });
-      alert("Sucesso! Sua assinatura digital foi registrada neste documento.");
+      await alert("Sucesso! Sua assinatura digital foi registrada neste documento.", "Assinatura Digital");
       await loadPending(); 
     } catch (error) {
       const msg = error.response?.data?.detail || "Verifique suas credenciais de acesso corporativo.";
-      alert(`Falha na assinatura: ${msg}`);
+      await alert(`Falha na assinatura: ${msg}`, "Falha de Assinatura");
     } finally {
       setSigningId(null);
     }
@@ -126,7 +143,7 @@ export default function CertificateAudit() {
 
         <Link 
           to="/history-certificates" 
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-brand-green/20 text-brand-green rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-green hover:text-white transition-all shadow-sm"
+          className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-brand-green/20 text-brand-green rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-green hover:text-white transition-all shadow-sm"
         >
           <History size={16} />
           Ver Histórico de Emitidos
@@ -151,8 +168,18 @@ export default function CertificateAudit() {
               (userRole === 'director' && isDirSigned) ||
               (userRole === 'orientador' && isOrientSigned);
 
+            const isHighlighted = highlightId && cert.id === highlightId;
+
             return (
-              <div key={cert.id} className="bg-white border border-gray-100 p-6 rounded-[32px] flex flex-col lg:flex-row items-center justify-between gap-6 border-l-4 border-l-brand-green shadow-sm hover:shadow-md transition-all">
+              <div 
+                key={cert.id} 
+                id={`cert-card-${cert.id}`}
+                className={`bg-white border p-4 md:p-6 rounded-[24px] md:rounded-[32px] flex flex-col lg:flex-row items-center justify-between gap-6 border-l-4 shadow-sm hover:shadow-md transition-all duration-500 ${
+                  isHighlighted 
+                    ? 'border-brand-green bg-brand-green/5 ring-2 ring-brand-green/20 scale-[1.01] border-l-brand-green' 
+                    : 'border-gray-100 border-l-brand-green'
+                }`}
+              >
                 
                 {/* Dados Principais do Membro */}
                 <div className="flex items-center gap-5 w-full lg:w-auto">
@@ -188,7 +215,7 @@ export default function CertificateAudit() {
                 </div>
 
                 {/* Botões Operacionais baseados na pendência do usuário atual */}
-                <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto justify-end">
                   <button 
                     onClick={() => handlePreview(cert)} 
                     className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-50 text-brand-dark rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 border border-gray-100 w-full lg:w-auto transition-all"

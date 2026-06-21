@@ -24,6 +24,8 @@ class Member(models.Model):
         choices=Status.choices,
         default=Status.ACTIVE,
     )
+    suspension_reason = models.TextField("Motivo da Suspensão", blank=True, null=True)
+
     
     created_at = models.DateTimeField("Criado em", auto_now_add=True)
     updated_at = models.DateTimeField("Atualizado em", auto_now=True)
@@ -45,3 +47,22 @@ class Member(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.registration})"
+
+
+class Sanction(models.Model):
+    member = models.ForeignKey(
+        Member,
+        on_delete=models.CASCADE,
+        related_name="sanctions",
+        verbose_name="Membro"
+    )
+    description = models.TextField("Descrição/Motivo da Punição")
+    created_at = models.DateTimeField("Aplicada em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Punição"
+        verbose_name_plural = "Punições"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Punição para {self.member.name} em {self.created_at.strftime('%d/%m/%Y')}"

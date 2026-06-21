@@ -5,12 +5,15 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .permissions import IsAdmin, IsAdminOrViewer
+from .models import Notification
 from .serializers import (
     ChangePasswordSerializer,
     CreateUserSerializer,
     CustomTokenObtainPairSerializer,
     UserSerializer,
+    NotificationSerializer,
 )
+
 
 User = get_user_model()
 
@@ -66,3 +69,27 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdmin]
+
+
+
+class NotificationListView(generics.ListAPIView):
+    """
+    GET → Lista todas as notificações do usuário logado.
+    """
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAdminOrViewer]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+
+class NotificationDetailView(generics.UpdateAPIView, generics.DestroyAPIView):
+    """
+    PATCH  → Atualiza o status (como is_read) de uma notificação.
+    DELETE → Remove uma notificação.
+    """
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAdminOrViewer]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)

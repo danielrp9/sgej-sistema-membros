@@ -81,3 +81,25 @@ class User(AbstractUser):
     @property
     def is_coordinator(self):
         return self.role == self.Role.COORDINATOR
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+    title = models.CharField("Título", max_length=255)
+    message = models.TextField("Mensagem")
+    is_read = models.BooleanField("Lida?", default=False)
+    certificate_id = models.IntegerField("ID do Certificado", null=True, blank=True)
+    created_at = models.DateTimeField("Criada em", auto_now_add=True)
+
+
+    class Meta:
+        verbose_name = "Notificação"
+        verbose_name_plural = "Notificações"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.title} ({'Lida' if self.is_read else 'Não lida'})"

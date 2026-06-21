@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from django.utils import timezone
 
 from accounts.permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOrViewer
-from .models import Member
+from .models import Member, Sanction
 from .serializers import MemberSerializer, MemberListSerializer
 from certificates.models import Certificate
 from core.mixins import AuditLogMixin
@@ -19,9 +19,7 @@ class MemberListCreateView(AuditLogMixin, generics.ListCreateAPIView):
     ordering = ["name"]
 
     def get_permissions(self):
-        if self.request.method == "POST":
-            return [IsAdmin()]
-        return [IsAdminOrViewer()]
+        return [IsAdmin()]
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -47,7 +45,8 @@ class MemberDetailView(AuditLogMixin, generics.RetrieveUpdateDestroyAPIView):
     audit_model_name = "Member"
     queryset = Member.objects.all()
     serializer_class = MemberSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdmin]
+
 
 class MemberStatsView(APIView):
     """Retorna contagem de membros por status para o dashboard."""
@@ -71,7 +70,7 @@ class MemberHistoryView(APIView):
     Retorna o histórico de permanência de um membro específico.
     ESSENCIAL: Retorna sempre uma lista [] para evitar erro de .map() no frontend.
     """
-    permission_classes = [IsAdminOrViewer]
+    permission_classes = [IsAdmin]
 
     def get(self, request, pk):
         try:
@@ -111,6 +110,12 @@ class MemberTerminateView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            if member.status == Member.Status.SUSPENDED:
+                return Response(
+                    {"detail": "Membro suspenso não tem direito a certificado."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             member.exit_date = timezone.now().date()
             member.status = Member.Status.INACTIVE
             member.save()
@@ -140,5 +145,68 @@ class MemberTerminateView(APIView):
                 "certificate_id": certificate.id
             }, status=status.HTTP_200_OK)
 
+        except Member.DoesNotExist:
+            return Response({"detail": "Membro não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class MemberSuspendView(APIView):
+    """
+    POST /api/v1/members/{id}/suspend/
+    Suspende o membro, registrando o motivo da suspensão.
+    """
+    permission_classes = [IsAdmin]
+
+    def post(self, request, pk):
+        try:
+            member = Member.objects.get(pk=pk)
+            reason = request.data.get("reason", "")
+            
+            if not reason:
+                return Response(
+                    {"detail": "O motivo da suspensão é obrigatório."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            member.status = Member.Status.SUSPENDED
+            member.suspension_reason = reason
+            member.save()
+
+            return Response({
+                "message": "Membro suspenso com sucesso.",
+                "status": member.status,
+                "suspension_reason": member.suspension_reason
+            }, status=status.HTTP_200_OK)
+
+        except Member.DoesNotExist:
+            return Response({"detail": "Membro não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class MemberAddSanctionView(APIView):
+    """
+    POST /api/v1/members/{id}/sanctions/
+    Aplica uma punição/sanção manual ao perfil de um membro.
+    """
+    permission_classes = [IsAdmin]
+
+    def post(self, request, pk):
+        try:
+            member = Member.objects.get(pk=pk)
+            description = request.data.get("description", "").strip()
+            if not description:
+                return Response(
+                    {"detail": "A descrição da punição é obrigatória."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            sanction = Sanction.objects.create(member=member, description=description)
+            
+            return Response({
+                "message": "Punição aplicada com sucesso.",
+                "sanction": {
+                    "id": sanction.id,
+                    "description": sanction.description,
+                    "created_at": sanction.created_at.strftime("%d/%m/%Y %H:%M")
+                }
+            }, status=status.HTTP_201_CREATED)
         except Member.DoesNotExist:
             return Response({"detail": "Membro não encontrado."}, status=status.HTTP_404_NOT_FOUND)

@@ -1,18 +1,34 @@
 from rest_framework import serializers
-from .models import Member
+from .models import Member, Sanction
+
+
+class SanctionSerializer(serializers.ModelSerializer):
+    created_at_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Sanction
+        fields = ["id", "description", "created_at", "created_at_display"]
+        read_only_fields = ["id", "created_at", "created_at_display"]
+
+    def get_created_at_display(self, obj):
+        return obj.created_at.strftime("%d/%m/%Y %H:%M")
+
 
 class MemberSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source="get_status_display", read_only=True)
+    sanctions = SanctionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Member
         fields = [
             "id", "name", "email", "cpf", "registration", 
             "course", "role", "department", "entry_date", 
-            "exit_date", "status", "status_display", 
-            "created_at", "updated_at"
+            "exit_date", "status", "status_display", "suspension_reason",
+            "sanctions", "created_at", "updated_at"
         ]
+
         read_only_fields = ["id", "created_at", "updated_at"]
+
 
     def validate(self, attrs):
         entry_date = attrs.get("entry_date")
@@ -28,4 +44,8 @@ class MemberListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ["id", "name", "email", "registration", "status", "status_display", "entry_date", "role"]
+        fields = [
+            "id", "name", "email", "registration", "status", 
+            "status_display", "entry_date", "exit_date", "role", 
+            "department", "suspension_reason"
+        ]

@@ -151,3 +151,26 @@ class MemberCertificatesView(generics.ListAPIView):
         return Certificate.objects.filter(member_id=self.kwargs["pk"]).select_related(
             "member", "signed_by_president", "signed_by_director", "signed_by_orientador"
         )
+
+
+class CertificateStatsView(APIView):
+    """
+    Retorna estatísticas quantitativas dos certificados criados no ano vigente para o dashboard.
+    """
+    permission_classes = [IsAdminOrViewer]
+
+    def get(self, request):
+        from django.utils import timezone
+        current_year = timezone.now().year
+        
+        year_certs = Certificate.objects.filter(created_at__year=current_year)
+        total = year_certs.count()
+        partial = year_certs.filter(status=Certificate.Status.PARTIAL).count()
+        approved = year_certs.filter(status=Certificate.Status.APPROVED).count()
+
+        return Response({
+            "year": current_year,
+            "total": total,
+            "partial": partial,
+            "approved": approved,
+        })

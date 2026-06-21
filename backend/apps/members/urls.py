@@ -4,8 +4,11 @@ from .views import (
     MemberDetailView, 
     MemberStatsView, 
     MemberTerminateView,
-    MemberHistoryView  # Certifique-se de que esta View existe no seu views.py
+    MemberHistoryView,
+    MemberSuspendView,
+    MemberAddSanctionView
 )
+
 
 urlpatterns = [
     path("", MemberListCreateView.as_view(), name="member_list_create"),
@@ -17,4 +20,6 @@ urlpatterns = [
     path("<int:pk>/history/", MemberHistoryView.as_view(), name="member_history"),
     
     path("<int:pk>/terminate/", MemberTerminateView.as_view(), name="member_terminate"),
+    path("<int:pk>/suspend/", MemberSuspendView.as_view(), name="member_suspend"),
+    path("<int:pk>/sanctions/", MemberAddSanctionView.as_view(), name="member_sanctions"),
 ]
