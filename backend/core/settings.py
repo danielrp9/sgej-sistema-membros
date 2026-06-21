@@ -97,10 +97,13 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.app",
     "https://*.ngrok.io",
+    "https://*.onrender.com",
+    "https://sgej-sistema-membros.onrender.com",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://localhost:5173",
