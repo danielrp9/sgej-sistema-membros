@@ -58,9 +58,9 @@ export default function MemberDetail() {
 
   const handleApplySanction = async () => {
     const description = await prompt(
-      "Descreva detalhadamente o motivo/descrição da punição disciplinar que será aplicada ao perfil deste colaborador:",
+      "Descreva detalhadamente o motivo/descrição da advertência que será aplicada ao perfil deste colaborador:",
       "",
-      "Aplicar Punição Disciplinar"
+      "Aplicar Advertência"
     );
     
     if (description === null) return; // Cancelado
@@ -291,7 +291,7 @@ export default function MemberDetail() {
                 onClick={handleApplySanction}
                 className="w-full py-3.5 bg-red-500 hover:bg-red-600 active:scale-95 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all mt-6 shadow-md hover:shadow-lg hover:shadow-red-500/10 flex items-center justify-center gap-2"
               >
-                <ShieldAlert size={14} /> Aplicar Punição
+                <ShieldAlert size={14} /> Aplicar Advertência
               </button>
             ) : member.status === 'SUSPENDED' ? (
               <div className="mt-6 p-4 bg-red-50 border border-red-200/60 rounded-2xl space-y-3">
