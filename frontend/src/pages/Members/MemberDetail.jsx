@@ -280,7 +280,7 @@ export default function MemberDetail() {
                 ))
               ) : (
                 <div className="text-center py-6 border border-dashed border-gray-200 rounded-2xl">
-                  <p className="text-[10px] font-bold text-brand-muted uppercase italic">Nenhuma punição no perfil.</p>
+                    <p className="text-[10px] font-bold text-brand-muted uppercase italic">Nenhuma advertência no perfil.</p>
                 </div>
               )}
             </div>
